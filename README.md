@@ -15,6 +15,20 @@ Micrófono USB → Raspberry Pi 4 → detección de canto → 2 modelos de IA �
 3. Cada detección se guarda con fecha, hora, especie y nivel de confianza.
 4. La Raspberry crea su propia red WiFi. Desde el celular se abre la interfaz CÓNDOR con la detección en vivo, el historial y las fichas de las especies.
 
+## Interfaz web
+
+La Raspberry crea su propia red WiFi y desde el celular se abre la interfaz CÓNDOR: catálogo de 50 especies del Meta, detección en vivo con la confianza de ambos modelos, historial y una ficha por especie.
+
+![Pantalla de inicio](docs/inicio.jpg)
+
+![Detección en vivo](docs/en-vivo.jpg)
+
+![Historial de detecciones](docs/historial.jpg)
+
+![Ficha de especie](docs/ficha-especie.jpg)
+
+*Capturas tomadas del código de la interfaz con datos de demostración. En la Raspberry, las tarjetas y fichas muestran la foto de cada especie.*
+
 ## Datos
 
 - Audios de cantos tomados de [Xeno-Canto](https://xeno-canto.org) y [Macaulay Library](https://www.macaulaylibrary.org), recolectados en equipo.
@@ -30,24 +44,30 @@ Micrófono USB → Raspberry Pi 4 → detección de canto → 2 modelos de IA �
 
 Las cifras corresponden a la primera versión del dataset (7 especies, audios originales), evaluada sin aumento de datos. El modelo actual de 20 especies se entrenó con el dataset aumentado.
 
-## Estructura del repositorio
+## Archivos del repositorio
 
-```
-colab/                       Entrenamiento en Google Colab
-  01_procesar_audios.py        Corte en segmentos de 10 s y normalización
-  02a_aumento_datos_...py      Aumento de datos para las especies nuevas
-  02b_balancear_840_...py      Balanceo a 840 audios por especie
-  03_renombrar_carpetas_...py  Ajuste de nombres de carpetas en Google Drive
-  04_espectrogramas_...py      Generación de espectrogramas Mel
-  05_random_forest_...py       Entrenamiento del Random Forest (20 especies)
-  06_cnn_transfer_...py        Entrenamiento de la CNN con MobileNetV2
-  07_demo_gradio.py            Demo web tipo "Shazam" para probar los modelos
-raspberry/                   Sistema en campo
-  inferencia.py                Captura, detección, clasificación y registro en SQLite
-  app.py                       Servidor Flask con la interfaz CÓNDOR
-  descargar_fotos.py           Descarga de fotos para las fichas de especies
-versiones_anteriores/        Primeras versiones con 7 especies
-```
+**Entrenamiento en Google Colab**
+
+| Archivo | Qué hace |
+| --- | --- |
+| `01_procesar_audios.py` | Corte en segmentos de 10 s y normalización |
+| `02a_aumento_datos_especies_nuevas.py` | Aumento de datos para las especies nuevas |
+| `02b_balancear_840_por_especie.py` | Balanceo a 840 audios por especie |
+| `03_renombrar_carpetas_drive.py` | Ajuste de nombres de carpetas en Google Drive |
+| `04_espectrogramas_20_especies.py` | Generación de espectrogramas Mel |
+| `05_random_forest_20_especies.py` | Entrenamiento del Random Forest (20 especies) |
+| `06_cnn_transfer_learning_mobilenetv2.py` | Entrenamiento de la CNN con MobileNetV2 |
+| `07_demo_gradio.py` | Demo web tipo "Shazam" para probar los modelos |
+
+**Sistema en campo (Raspberry Pi)**
+
+| Archivo | Qué hace |
+| --- | --- |
+| `inferencia.py` | Captura, detección, clasificación y registro en SQLite |
+| `app.py` | Servidor Flask con la interfaz CÓNDOR |
+| `descargar_fotos.py` | Descarga de fotos para las fichas de especies |
+
+**Versiones anteriores (7 especies):** `modelo_rf_v3_7_especies.py`, `espectrogramas_7_especies.py`
 
 ## Hardware
 
@@ -59,11 +79,11 @@ versiones_anteriores/        Primeras versiones con 7 especies
 
 ```bash
 pip install -r requirements.txt
-python3 raspberry/inferencia.py   # terminal 1: escucha y clasifica
-python3 raspberry/app.py          # terminal 2: interfaz web en el puerto 5000
+python3 inferencia.py   # terminal 1: escucha y clasifica
+python3 app.py          # terminal 2: interfaz web en el puerto 5000
 ```
 
-Los modelos entrenados (`.joblib` y `.keras`) se generan con los scripts de `colab/` y se copian a la Raspberry.
+Los modelos entrenados (`.joblib` y `.keras`) se generan con los scripts de entrenamiento y se copian a la Raspberry.
 
 ## Tecnologías
 
