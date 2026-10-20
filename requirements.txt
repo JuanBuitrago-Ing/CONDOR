@@ -1,0 +1,18 @@
+# Raspberry Pi (inferencia + interfaz)
+numpy
+librosa
+scikit-learn
+joblib
+tensorflow
+sounddevice
+flask
+pillow
+matplotlib
+
+# Entrenamiento en Google Colab (además de lo anterior)
+soundfile
+pandas
+seaborn
+gradio
+requests
+beautifulsoup4

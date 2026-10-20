@@ -1,0 +1,601 @@
+HTML = '''<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>CÓNDOR — Sistema IA Aves</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#7B5C0A;--gold2:#C9A84C;--gold3:#E8C870;
+  --text:#1C1912;--muted:#6A6258;--muted2:#9A9288;
+  --green:#1A6B5A;--orange:#B05020;
+  --glass:rgba(255,255,255,.82);
+  --glass-border:rgba(255,255,255,.65);
+  --shadow:0 4px 24px rgba(0,0,0,.10),0 1px 4px rgba(0,0,0,.06);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.07);
+}
+html,body{height:100%;overflow:hidden;font-family:Georgia,serif}
+
+/* ── FONDO FIJO SIEMPRE ───────────────────────────────────── */
+body{
+  background:linear-gradient(180deg,
+    #8AB8D8 0%,#A8CDE8 18%,#C8E0F2 38%,
+    #DDF0F8 55%,#EAF3F5 70%,#EDE8DF 100%);
+}
+#mtn-bg{
+  position:fixed;bottom:0;left:0;width:100%;height:58%;
+  z-index:0;pointer-events:none;
+}
+#mtn-bg svg{width:100%;height:100%}
+
+/* ── PAGES ───────────────────────────────────────────────── */
+
+.page{
+  position:fixed;inset:0;z-index:1;
+  display:none;opacity:0;transition:opacity .5s;
+  flex-direction:column;background:transparent;
+}
+.page.active{display:flex;opacity:1}
+
+/* ══ LANDING ════════════════════════════════════════════════ */
+#landing{align-items:center;justify-content:center}
+
+.condor-anim{
+  animation:soar 8s ease-in-out infinite;
+  filter:drop-shadow(0 10px 40px rgba(0,0,0,.25));
+  margin-bottom:20px;
+}
+@keyframes soar{
+  0%,100%{transform:translateY(0) rotate(-1.5deg)}
+  35%{transform:translateY(-34px) rotate(1.8deg)}
+  65%{transform:translateY(-15px) rotate(-.6deg)}
+}
+.w-l{transform-origin:98% 52%;animation:wl 5s ease-in-out infinite}
+.w-r{transform-origin:2% 52%;animation:wr 5s ease-in-out infinite}
+@keyframes wl{0%,100%{transform:rotate(0)}50%{transform:rotate(5deg)}}
+@keyframes wr{0%,100%{transform:rotate(0)}50%{transform:rotate(-5deg)}}
+
+.l-content{
+  position:relative;z-index:2;text-align:center;
+  /* push content up so it floats above mountains */
+  margin-bottom:28%;
+}
+.l-title{
+  font-size:clamp(50px,9vw,84px);font-weight:700;
+
+  letter-spacing:20px;color:#2A1E08;
+  text-shadow:0 2px 30px rgba(123,92,10,.2),0 0 80px rgba(255,255,255,.4);
+  margin-bottom:10px;
+}
+.l-sub{
+  font-size:13px;letter-spacing:4px;color:#5A4A30;
+  text-transform:uppercase;margin-bottom:5px;font-family:'Segoe UI',sans-serif;
+}
+.l-uni{
+  font-size:11px;letter-spacing:2px;color:#8A7A60;
+  margin-bottom:40px;font-family:'Segoe UI',sans-serif;
+}
+.btn-enter{
+  background:linear-gradient(135deg,#7B5C0A,#4A3608);
+  color:#F5DFA0;border:none;padding:15px 52px;
+  font-size:12px;font-weight:700;letter-spacing:4px;
+  text-transform:uppercase;font-family:'Segoe UI',sans-serif;
+  cursor:pointer;transition:all .3s;
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+  box-shadow:0 6px 30px rgba(123,92,10,.4),0 2px 8px rgba(0,0,0,.2);
+}
+.btn-enter:hover{transform:translateY(-3px);box-shadow:0 10px 40px rgba(123,92,10,.55)}
+.l-ver{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  font-size:10px;color:rgba(100,88,68,.6);letter-spacing:2px;
+  font-family:'Segoe UI',sans-serif;z-index:2;
+}
+
+/* ══ APP ════════════════════════════════════════════════════ */
+#app{overflow:hidden}
+.hdr{
+  background:rgba(255,255,255,.88);
+
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  height:54px;display:flex;align-items:center;gap:14px;padding:0 20px;
+  border-bottom:2px solid rgba(201,168,76,.5);
+  box-shadow:0 2px 20px rgba(0,0,0,.08);
+  flex-shrink:0;position:relative;z-index:10;
+}
+.btn-back{
+  background:rgba(255,255,255,.6);border:1px solid rgba(201,168,76,.4);
+  color:var(--muted);padding:6px 12px;border-radius:3px;cursor:pointer;
+  font-size:11px;letter-spacing:1px;font-family:'Segoe UI',sans-serif;
+  transition:all .2s;backdrop-filter:blur(4px);
+}
+.btn-back:hover{border-color:var(--gold);color:var(--gold)}
+.h-logo{font-size:17px;font-weight:700;letter-spacing:7px;color:var(--gold)}
+.h-tabs{margin-left:auto;display:flex;gap:2px}
+.tab{
+  background:none;border:none;color:var(--muted);
+  padding:8px 16px;cursor:pointer;font-size:11px;
+  font-family:'Segoe UI',sans-serif;letter-spacing:1px;
+  border-bottom:2px solid transparent;transition:all .2s;
+}
+.tab:hover{color:var(--gold)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);font-weight:700}
+
+/* ── SECTIONS ── */
+.app-body{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:2}
+.sec{display:none;padding:20px;animation:fadeUp .3s ease}
+.sec.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.sec-titulo{
+  font-size:10px;letter-spacing:3px;color:var(--muted);
+
+  text-transform:uppercase;font-family:'Segoe UI',sans-serif;
+  margin-bottom:18px;padding-bottom:10px;
+  border-bottom:1px solid rgba(0,0,0,.08);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sec-count{
+  background:var(--gold);color:#fff;
+  padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;
+}
+
+/* ── GRIDS ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.card{
+  background:var(--glass);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--glass-border);
+  border-radius:10px;overflow:hidden;cursor:pointer;
+  transition:all .3s;box-shadow:var(--shadow);
+  position:relative;
+}
+.card:hover{
+  transform:translateY(-5px);
+  box-shadow:var(--shadow-lg);
+  border-color:rgba(201,168,76,.5);
+  background:rgba(255,255,255,.92);
+}
+.card:hover .c-arrow{color:var(--gold);transform:translateX(4px)}
+.c-hero{
+  height:115px;display:flex;align-items:center;
+  justify-content:center;position:relative;overflow:hidden;
+}
+.c-emoji{font-size:52px;position:relative;z-index:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.2))}
+
+.c-body{padding:14px}
+.c-nom{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
+.c-cient{font-size:11px;color:var(--muted);font-style:italic;margin-bottom:10px;font-family:'Segoe UI',sans-serif}
+.c-foot{display:flex;align-items:center;justify-content:space-between}
+.c-tag{
+  display:inline-block;padding:3px 9px;border-radius:2px;
+  font-size:10px;font-family:'Segoe UI',sans-serif;font-weight:600;
+}
+.c-arrow{font-size:14px;color:var(--muted2);transition:all .2s}
+.c-det-count{
+  position:absolute;top:10px;right:10px;
+  background:rgba(123,92,10,.88);color:#F5DFA0;
+  padding:3px 8px;border-radius:10px;
+  font-size:10px;font-weight:700;font-family:'Segoe UI',sans-serif;
+}
+.badge-ent{
+  position:absolute;top:10px;left:10px;
+  background:rgba(26,107,90,.88);color:#B0F0E0;
+  padding:2px 7px;border-radius:3px;
+  font-size:9px;font-weight:700;font-family:'Segoe UI',sans-serif;letter-spacing:1px;
+}
+
+/* ── VACIO ── */
+.vacio{text-align:center;padding:48px 20px;color:var(--muted);font-family:'Segoe UI',sans-serif;font-size:14px}
+.vacio-icon{font-size:44px;margin-bottom:12px;opacity:.35}
+.vacio-msg{margin-bottom:6px}
+.vacio-sub{font-size:12px;color:var(--muted2)}
+
+/* ── MODAL ── */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(20,16,8,.65);
+
+  z-index:200;display:none;align-items:center;justify-content:center;
+  padding:16px;backdrop-filter:blur(10px);
+}
+.overlay.open{display:flex;animation:fadeUp .2s ease}
+.modal{
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.8);
+  border-radius:12px;width:100%;max-width:660px;max-height:92vh;
+  overflow-y:auto;box-shadow:0 32px 100px rgba(0,0,0,.2);
+  animation:modalIn .3s cubic-bezier(.34,1.4,.64,1);
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.93) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.m-hero{height:180px;display:flex;align-items:center;justify-content:center;position:relative;border-radius:12px 12px 0 0;overflow:hidden}
+.m-emoji{font-size:68px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.2))}
+.m-close{
+  position:absolute;top:12px;right:12px;z-index:10;
+  background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.1);
+  color:var(--text);width:32px;height:32px;border-radius:50%;
+  cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;backdrop-filter:blur(4px);
+}
+.m-close:hover{background:#C02020;color:white;border-color:#C02020}
+.m-body{padding:22px}
+.m-nombre{font-size:24px;font-weight:700;color:var(--gold);margin-bottom:4px}
+.m-cient{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:18px;font-family:'Segoe UI',sans-serif}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.m-info{
+  background:rgba(237,232,223,.7);border:1px solid rgba(0,0,0,.06);
+  border-radius:6px;padding:12px;
+}
+.m-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;font-family:'Segoe UI',sans-serif}
+
+.m-val{font-size:13px;color:var(--text);font-family:'Segoe UI',sans-serif;line-height:1.4}
+.m-desc{font-size:14px;color:var(--muted);line-height:1.75;margin-bottom:18px;font-family:'Segoe UI',sans-serif}
+.m-audio-box{
+  background:rgba(237,232,223,.7);border:1px solid rgba(0,0,0,.06);
+  border-radius:6px;padding:14px;margin-bottom:18px;
+}
+.m-audio-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;font-family:'Segoe UI',sans-serif}
+audio{width:100%;height:32px}
+.no-audio{font-size:12px;color:var(--muted2);text-align:center;font-family:'Segoe UI',sans-serif;padding:4px 0}
+.m-dets-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;font-family:'Segoe UI',sans-serif}
+.det-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.06);font-family:'Segoe UI',sans-serif}
+.det-hora{font-size:11px;color:var(--muted)}
+.det-cnn{font-size:12px;color:var(--green);font-weight:600}
+.det-rf{font-size:12px;color:var(--orange);font-weight:600}
+
+/* ── DASHBOARD ── */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.d-card{
+  background:var(--glass);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--glass-border);
+  border-radius:10px;padding:18px;
+  box-shadow:var(--shadow);
+}
+.d-h{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;font-family:'Segoe UI',sans-serif;display:flex;align-items:center;gap:7px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(26,107,90,.4)}50%{box-shadow:0 0 0 7px rgba(26,107,90,0)}}
+.d-esp{font-size:20px;font-weight:700;color:var(--gold);margin-bottom:6px}
+.d-hora{font-size:11px;color:var(--muted);margin-bottom:12px;font-family:'Segoe UI',sans-serif}
+.m-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06)}
+.m-inf{flex:1}
+.m-lbl2{font-size:9px;color:var(--muted);font-family:'Segoe UI',sans-serif;margin-bottom:2px;letter-spacing:1px;text-transform:uppercase}
+
+.m-nom{font-size:12px;font-weight:600;font-family:'Segoe UI',sans-serif;color:var(--text)}
+.bw{width:100%;background:rgba(0,0,0,.07);border-radius:2px;height:3px;margin-top:5px}
+.bf{height:3px;border-radius:2px;transition:width 1.2s ease}
+.m-pct{font-size:14px;font-weight:700;margin-left:12px;font-family:'Segoe UI',sans-serif}
+.badge2{display:inline-block;margin-top:11px;padding:4px 12px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:1px;font-family:'Segoe UI',sans-serif}
+.b-si{background:rgba(26,107,90,.1);color:var(--green);border:1px solid rgba(26,107,90,.2)}
+.b-no{background:rgba(176,80,32,.1);color:var(--orange);border:1px solid rgba(176,80,32,.2)}
+.s-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.s-nom{font-size:11px;color:var(--text);width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Segoe UI',sans-serif}
+.s-bw{flex:1;background:rgba(0,0,0,.07);border-radius:2px;height:5px}
+.s-bf{height:5px;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold3));transition:width 1.2s ease}
+.s-n{font-size:11px;color:var(--gold);font-weight:700;width:22px;text-align:right;font-family:'Segoe UI',sans-serif}
+.h-item{padding:11px 0;border-bottom:1px solid rgba(0,0,0,.06)}
+.h-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.h-hora{font-size:10px;color:var(--muted);font-family:'Segoe UI',sans-serif}
+.h-cnn{font-size:12px;color:var(--green);font-family:'Segoe UI',sans-serif;margin-bottom:2px}
+.h-rf{font-size:12px;color:var(--orange);font-family:'Segoe UI',sans-serif}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.04)}
+::-webkit-scrollbar-thumb{background:rgba(201,168,76,.4);border-radius:2px}
+@media(max-width:600px){
+  .dash-grid,.m-grid{grid-template-columns:1fr}
+  .h-tabs .tab{padding:8px 10px;font-size:10px}
+  .l-title{letter-spacing:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ FONDO MONTAÑAS FIJO (siempre visible) ════════════════ -->
+<div id="mtn-bg">
+
+  <svg viewBox="0 0 1440 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+    <!-- Rango lejano -->
+    <path d="M-10,320 L80,215 L160,255 L255,178 L340,222 L430,158 L520,204 L610,140 L710,188 L800,130 L890,176 L975,150 L1065,196 L1150,160 L1245,202 L1335,165 L1450,208 L1450,400 L-10,400Z" fill="#C0D4E4" opacity=".75"/>
+    <!-- Nieves lejanas -->
+    <path d="M430,158 L454,186 L406,186Z M610,140 L638,170 L582,170Z M800,130 L830,162 L770,162Z M975,150 L998,176 L952,176Z M1150,160 L1174,186 L1126,186Z" fill="white" opacity=".92"/>
+    <!-- Neblina -->
+    <rect x="-10" y="292" width="1460" height="40" fill="white" opacity=".12"/>
+    <!-- Rango medio -->
+    <path d="M-10,368 L105,280 L205,318 L315,246 L415,290 L520,230 L620,274 L720,218 L820,262 L920,230 L1020,272 L1120,242 L1220,282 L1320,254 L1450,288 L1450,400 L-10,400Z" fill="#8AAABF"/>
+    <!-- Nieves medias -->
+    <path d="M520,230 L547,258 L493,258Z M720,218 L750,248 L690,248Z M920,230 L945,255 L895,255Z" fill="white" opacity=".85"/>
+    <!-- Rango cercano -->
+    <path d="M-10,390 L125,324 L225,358 L345,290 L445,332 L555,274 L660,316 L760,282 L870,320 L975,290 L1078,326 L1180,297 L1285,332 L1385,305 L1450,324 L1450,400 L-10,400Z" fill="#5A8098"/>
+    <!-- Bosque / treeline -->
+    <path d="M-10,399 C80,385 175,396 270,390 C365,384 460,396 555,390 C650,384 745,395 840,389 C935,383 1030,395 1125,389 C1220,383 1320,394 1440,388 L1440,400 L-10,400Z" fill="#2A5A32"/>
+    <!-- Siluetas de árboles -->
+    <g fill="#1E4826" opacity=".85">
+      <path d="M38,400 L44,382 L50,400Z M76,400 L83,378 L90,400Z M128,400 L134,384 L140,400Z M175,400 L182,376 L189,400Z"/>
+      <path d="M275,400 L282,380 L289,400Z M325,400 L332,376 L339,400Z M385,400 L392,382 L399,400Z"/>
+      <path d="M575,400 L582,378 L589,400Z M628,400 L634,384 L640,400Z M688,400 L695,376 L702,400Z"/>
+      <path d="M875,400 L882,380 L889,400Z M938,400 L945,376 L952,400Z M1005,400 L1012,382 L1019,400Z"/>
+      <path d="M1195,400 L1202,380 L1209,400Z M1258,400 L1265,384 L1272,400Z M1325,400 L1332,378 L1339,400Z"/>
+    </g>
+  </svg>
+</div>
+
+<!-- ══ LANDING ════════════════════════════════════════════════ -->
+<div id="landing" class="page active" style="display:flex">
+  <div class="l-content">
+    <div class="condor-anim">
+      <svg viewBox="0 0 560 240" width="500" height="214" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="280" cy="232" rx="90" ry="7" fill="rgba(40,28,8,.14)"/>
+
+        <g class="w-l">
+          <path d="M280,114 C256,96 212,74 162,59 C112,45 62,44 22,56 C8,61 0,72 4,84 C30,75 80,76 140,88 C184,97 234,106 280,114Z" fill="#231A0E"/>
+          <path d="M280,114 C258,105 232,92 200,86 C220,94 248,104 280,114Z" fill="#B0A898" opacity=".5"/>
+        </g>
+        <g class="w-r">
+          <path d="M280,114 C304,96 348,74 398,59 C448,45 498,44 538,56 C552,61 560,72 556,84 C530,75 480,76 420,88 C376,97 326,106 280,114Z" fill="#231A0E"/>
+          <path d="M280,114 C302,105 328,92 360,86 C340,94 312,104 280,114Z" fill="#B0A898" opacity=".5"/>
+        </g>
+        <ellipse cx="280" cy="122" rx="42" ry="22" fill="#160E08"/>
+        <path d="M260,138 C267,158 280,166 293,158 C287,143 272,138 260,138Z" fill="#231A0E"/>
+        <ellipse cx="295" cy="111" rx="19" ry="12" fill="#E8E4DC"/>
+        <ellipse cx="293" cy="112" rx="14" ry="9" fill="#D0CCC4"/>
+        <ellipse cx="300" cy="101" rx="12" ry="17" fill="#6A1818"/>
+        <circle cx="305" cy="90" r="16" fill="#8B2020"/>
+        <circle cx="299" cy="85" r="8" fill="#A03030" opacity=".45"/>
+        <circle cx="311" cy="88" r="4.5" fill="#D89A00"/>
+        <circle cx="312" cy="88" r="2.5" fill="#0A080A"/>
+        <circle cx="311" cy="87" r="1" fill="white"/>
+        <path d="M318,90 L336,93 L318,98 C315,98 312,96 312,93 C312,91 315,90 318,90Z" fill="#C09040"/>
+        <path d="M318,90 L336,93 L318,94Z" fill="#A07030"/>
+        <path d="M309,82 C317,77 321,83 318,87 C314,92 307,89 309,82Z" fill="#9B3030"/>
+      </svg>
+    </div>
+    <div class="l-title">CÓNDOR</div>
+    <div class="l-sub">Sistema de Identificación de Aves por IA</div>
+    <div class="l-uni">Universidad de los Llanos · Ingeniería Electrónica · 2025</div>
+    <button class="btn-enter" onclick="irApp()">Explorar Especies</button>
+  </div>
+  <div class="l-ver">v1.0 · Prototipo</div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════════════ -->
+
+<div id="app" class="page">
+  <div class="hdr">
+    <button class="btn-back" onclick="irLanding()">← Inicio</button>
+    <div class="h-logo">CÓNDOR</div>
+    <div class="h-tabs">
+      <button class="tab active" onclick="sec('especies',this)">Especies</button>
+      <button class="tab" onclick="sec('datos',this)">Datos</button>
+      <button class="tab" onclick="sec('live',this)">En Vivo</button>
+      <button class="tab" onclick="sec('historial',this)">Historial</button>
+    </div>
+  </div>
+  <div class="app-body">
+
+    <div id="s-especies" class="sec active">
+      <div class="sec-titulo">
+        <span>Especies Detectadas</span>
+        <span class="sec-count" id="cnt-esp">0</span>
+      </div>
+      <div class="grid" id="g-esp"></div>
+    </div>
+
+    <div id="s-datos" class="sec">
+      <div class="sec-titulo">
+        <span>Catálogo — Meta / Llanos Orientales</span>
+        <span class="sec-count">50</span>
+      </div>
+      <div class="grid" id="g-datos"></div>
+    </div>
+
+    <div id="s-live" class="sec">
+      <div class="dash-grid">
+        <div class="d-card">
+
+          <div class="d-h"><span class="live-dot"></span>Última Detección</div>
+          <div id="d-ult"><div class="vacio"><div class="vacio-icon">🎙️</div><div class="vacio-msg">Sin detecciones aún</div><div class="vacio-sub">Activa inferencia.py para escuchar</div></div></div>
+        </div>
+        <div class="d-card">
+          <div class="d-h">Detecciones de Hoy</div>
+          <div id="d-stats"><div class="vacio"><div class="vacio-icon">📊</div><div class="vacio-msg">Sin datos</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="s-historial" class="sec">
+      <div class="d-card">
+        <div class="d-h">Registro Completo</div>
+        <div id="d-hist"><div class="vacio"><div class="vacio-icon">📋</div><div class="vacio-msg">Sin detecciones</div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MODAL ══════════════════════════════════════════════════ -->
+<div class="overlay" id="modal" onclick="if(event.target===this)cerrar()">
+  <div class="modal">
+    <div class="m-hero" id="m-hero">
+      <div class="m-emoji" id="m-emoji">🐦</div>
+      <button class="m-close" onclick="cerrar()">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="m-nombre" id="m-nombre"></div>
+      <div class="m-cient" id="m-cient"></div>
+      <div class="m-grid">
+        <div class="m-info"><div class="m-lbl">Hábitat</div><div class="m-val" id="m-hab"></div></div>
+
+        <div class="m-info"><div class="m-lbl">Familia</div><div class="m-val" id="m-fam"></div></div>
+        <div class="m-info"><div class="m-lbl">Detecciones hoy</div><div class="m-val" id="m-hoy"></div></div>
+        <div class="m-info"><div class="m-lbl">Total detectada</div><div class="m-val" id="m-tot"></div></div>
+      </div>
+      <div class="m-desc" id="m-desc"></div>
+      <div class="m-audio-box">
+        <div class="m-audio-lbl">🔊 Canto base registrado</div>
+        <div id="m-audio"></div>
+      </div>
+      <div class="m-dets-lbl">Detecciones recientes</div>
+      <div id="m-dets"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ESPECIES = {{ especies_json|safe }};
+const FAM={
+  Trochilidae:{e:'🌿',g:'linear-gradient(135deg,#0A2015,#1A4025)',c:'#4CAF80'},
+  Hirundinidae:{e:'🌊',g:'linear-gradient(135deg,#0A1828,#1A3050)',c:'#5890C8'},
+  Passerellidae:{e:'🌾',g:'linear-gradient(135deg,#251508,#50280A)',c:'#C88040'},
+  Tyrannidae:{e:'🌤️',g:'linear-gradient(135deg,#1A1808,#383010)',c:'#C8B840'},
+  Corvidae:{e:'💜',g:'linear-gradient(135deg,#150A28,#28104A)',c:'#9870C8'},
+  Ardeidae:{e:'🦢',g:'linear-gradient(135deg,#081820,#103040)',c:'#5090B8'},
+  Threskiornithidae:{e:'🔴',g:'linear-gradient(135deg,#280808,#501010)',c:'#C84040'},
+  Ciconiidae:{e:'⬜',g:'linear-gradient(135deg,#181818,#303030)',c:'#909090'},
+  Anatidae:{e:'🦆',g:'linear-gradient(135deg,#082010,#104020)',c:'#40A060'},
+  Accipitridae:{e:'🦅',g:'linear-gradient(135deg,#1A0A08,#382018)',c:'#A06040'},
+  Falconidae:{e:'🦅',g:'linear-gradient(135deg,#080818,#101830)',c:'#5070A8'},
+  Cathartidae:{e:'🦅',g:'linear-gradient(135deg,#100808,#281410)',c:'#C9A84C'},
+  Opisthocomidae:{e:'🦜',g:'linear-gradient(135deg,#181008,#302010)',c:'#A08050'},
+  Psittacidae:{e:'🦜',g:'linear-gradient(135deg,#081808,#103010)',c:'#40B840'},
+
+  Picidae:{e:'🐦',g:'linear-gradient(135deg,#200808,#401010)',c:'#C04040'},
+  Ramphastidae:{e:'🌈',g:'linear-gradient(135deg,#081818,#102828)',c:'#40A8A8'},
+  Alcedinidae:{e:'🐟',g:'linear-gradient(135deg,#081028,#102048)',c:'#4060C0'},
+  Thraupidae:{e:'✨',g:'linear-gradient(135deg,#1A1808,#302808)',c:'#C8A830'},
+  Cuculidae:{e:'🐦',g:'linear-gradient(135deg,#101808,#202808)',c:'#709040'},
+  Caprimulgidae:{e:'🌙',g:'linear-gradient(135deg,#080810,#101018)',c:'#7870A0'},
+  Thamnophilidae:{e:'🐦',g:'linear-gradient(135deg,#080808,#181818)',c:'#808080'},
+  Pipridae:{e:'🔴',g:'linear-gradient(135deg,#200808,#380808)',c:'#D04040'},
+  Rallidae:{e:'💙',g:'linear-gradient(135deg,#080820,#101040)',c:'#4848C0'},
+  Furnariidae:{e:'🐦',g:'linear-gradient(135deg,#181008,#302010)',c:'#A08040'},
+  Troglodytidae:{e:'🐦',g:'linear-gradient(135deg,#201008,#381808)',c:'#B07030'},
+  Mimidae:{e:'🎵',g:'linear-gradient(135deg,#181818,#282828)',c:'#A0A0A0'},
+  Pandionidae:{e:'🦅',g:'linear-gradient(135deg,#081018,#101828)',c:'#4878A8'},
+  Phalacrocoracidae:{e:'🐦',g:'linear-gradient(135deg,#080808,#141414)',c:'#606060'},
+  Icteridae:{e:'🟠',g:'linear-gradient(135deg,#281008,#481808)',c:'#C86020'},
+  Jacanidae:{e:'🐦',g:'linear-gradient(135deg,#200A08,#381408)',c:'#C07040'},
+  Strigidae:{e:'🦉',g:'linear-gradient(135deg,#1A1005,#3A2808)',c:'#D4A843'},
+};
+function getCfg(nom){
+  const d=ESPECIES[nom];
+  if(!d) return{e:'🐦',g:'linear-gradient(135deg,#181410,#282018)',c:'#C9A84C'};
+  return FAM[d.familia]||{e:'🐦',g:'linear-gradient(135deg,#181410,#282018)',c:'#C9A84C'};
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>{p.style.display='none';p.classList.remove('active')});
+  const p=document.getElementById(id);p.style.display='flex';
+  setTimeout(()=>p.classList.add('active'),10);
+}
+function irApp(){showPage('app');cargarEsp();buildDatos()}
+function irLanding(){showPage('landing')}
+function sec(id,btn){
+
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');btn.classList.add('active');
+  if(id==='live'||id==='historial') fetchDash();
+  if(id==='especies') cargarEsp();
+}
+
+function makeCard(nom,data,cfg,detCount,showEnt){
+  const c=document.createElement('div');c.className='card';
+  c.innerHTML=`
+    <div class="c-hero" style="background:${cfg.g}">
+      <div class="c-emoji">${cfg.e}</div>
+      ${detCount>0?`<div class="c-det-count">${detCount} det.</div>`:''}
+      ${showEnt&&data.entrenada?'<div class="badge-ent">IA</div>':''}
+    </div>
+    <div class="c-body">
+      <div class="c-nom">${nom}</div>
+      <div class="c-cient">${data.cientifico}</div>
+      <div class="c-foot">
+        <span class="c-tag" style="background:${cfg.c}18;color:${cfg.c};border:1px solid ${cfg.c}28">${data.familia}</span>
+        <span class="c-arrow">→</span>
+      </div>
+    </div>`;
+  c.onclick=()=>abrirModal(nom,data,cfg);return c;
+}
+
+function cargarEsp(){
+  fetch('/api/especies-detectadas').then(r=>r.json()).then(lista=>{
+    const g=document.getElementById('g-esp');g.innerHTML='';
+    document.getElementById('cnt-esp').textContent=lista.length;
+    if(!lista.length){
+      g.innerHTML=`<div class="vacio" style="grid-column:1/-1"><div class="vacio-icon">🎙️</div><div class="vacio-msg">Ninguna especie detectada aún</div><div class="vacio-sub">Ejecuta inferencia.py para comenzar</div></div>`;
+
+      return;
+    }
+    lista.forEach(item=>{
+      const d=ESPECIES[item.especie];if(!d)return;
+      g.appendChild(makeCard(item.especie,d,getCfg(item.especie),item.total,true));
+    });
+  });
+}
+
+function buildDatos(){
+  const g=document.getElementById('g-datos');if(g.children.length>0)return;
+  Object.entries(ESPECIES).forEach(([nom,d])=>g.appendChild(makeCard(nom,d,getCfg(nom),0,true)));
+}
+
+function abrirModal(nom,data,cfg){
+  document.getElementById('m-hero').style.background=cfg.g;
+  document.getElementById('m-emoji').textContent=cfg.e;
+  document.getElementById('m-nombre').textContent=nom;
+  document.getElementById('m-cient').textContent=data.cientifico;
+  document.getElementById('m-hab').textContent=data.habitat;
+  document.getElementById('m-fam').textContent=data.familia+(data.entrenada?' · Modelo IA':'');
+  document.getElementById('m-desc').textContent=data.descripcion;
+  document.getElementById('m-hoy').textContent='Cargando...';
+  document.getElementById('m-tot').textContent='Cargando...';
+  document.getElementById('m-dets').innerHTML='';
+  document.getElementById('m-audio').innerHTML=data.audio
+    ?`<audio controls src="${data.audio}"></audio>`
+    :`<div class="no-audio">Audio no disponible aún</div>`;
+  fetch('/api/especie/'+encodeURIComponent(nom)).then(r=>r.json()).then(d=>{
+    document.getElementById('m-hoy').textContent=d.hoy+(d.hoy===1?' detección':' detecciones');
+    document.getElementById('m-tot').textContent=d.total+' en total';
+    document.getElementById('m-dets').innerHTML=!d.recientes.length
+
+      ?'<div class="vacio" style="padding:16px 0"><div class="vacio-msg">Sin detecciones de esta especie</div></div>'
+      :d.recientes.map(r=>`<div class="det-row"><span class="det-hora">${r.fecha} · ${r.hora}</span><span class="det-cnn">CNN ${parseFloat(r.confianza_cnn).toFixed(1)}%</span><span class="det-rf">RF ${parseFloat(r.confianza_rf).toFixed(1)}%</span></div>`).join('');
+  });
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function cerrar(){document.getElementById('modal').classList.remove('open');document.body.style.overflow=''}
+
+function fetchDash(){
+  fetch('/api/datos').then(r=>r.json()).then(d=>{rUlt(d.ultima);rStats(d.estadisticas);rHist(d.historial)});
+}
+function rUlt(d){
+  const div=document.getElementById('d-ult');
+  if(!d){div.innerHTML='<div class="vacio"><div class="vacio-icon">🎙️</div><div class="vacio-msg">Sin detecciones</div></div>';return}
+  const co=d.coinciden===1;
+  div.innerHTML=`<div class="d-esp">${d.especie_cnn.split(' - ')[0]}</div>
+    <div class="d-hora">${d.fecha} · ${d.hora}</div>
+    <div class="m-row"><div class="m-inf"><div class="m-lbl2">CNN · Transfer Learning</div><div class="m-nom">${d.especie_cnn.split(' - ')[0]}</div><div class="bw"><div class="bf" style="width:${parseFloat(d.confianza_cnn).toFixed(0)}%;background:var(--green)"></div></div></div><div class="m-pct" style="color:var(--green)">${parseFloat(d.confianza_cnn).toFixed(1)}%</div></div>
+    <div class="m-row"><div class="m-inf"><div class="m-lbl2">Random Forest</div><div class="m-nom">${d.especie_rf.split(' - ')[0]}</div><div class="bw"><div class="bf" style="width:${parseFloat(d.confianza_rf).toFixed(0)}%;background:var(--orange)"></div></div></div><div class="m-pct" style="color:var(--orange)">${parseFloat(d.confianza_rf).toFixed(1)}%</div></div>
+    <span class="badge2 ${co?'b-si':'b-no'}">${co?'✓ Coinciden':'⚡ Difieren'}</span>`;
+}
+function rStats(s){
+  const div=document.getElementById('d-stats');
+  if(!s||!s.length){div.innerHTML='<div class="vacio"><div class="vacio-icon">📊</div><div class="vacio-msg">Sin datos hoy</div></div>';return}
+  const mx=s[0].total;
+  div.innerHTML=s.map(r=>`<div class="s-row"><div class="s-nom">${r.especie.split(' - ')[0]}</div><div class="s-bw"><div class="s-bf" style="width:${(r.total/mx*100).toFixed(0)}%"></div></div><div class="s-n">${r.total}</div></div>`).join('');
+}
+function rHist(h){
+  const div=document.getElementById('d-hist');
+  if(!h||!h.length){div.innerHTML='<div class="vacio"><div class="vacio-icon">📋</div><div class="vacio-msg">Sin detecciones</div></div>';return}
+  div.innerHTML=h.map(r=>{const co=r.coinciden===1;return`<div class="h-item"><div class="h-top"><span class="h-hora">${r.fecha} · ${r.hora}</span><span class="badge2 ${co?'b-si':'b-no'}" style="padding:2px 8px;font-size:9px">${co?'Coinciden':'Difieren'}</span></div><div class="h-cnn">CNN: ${r.especie_cnn.split(' - ')[0]} · ${parseFloat(r.confianza_cnn).toFixed(1)}%</div><div class="h-rf">RF: ${r.especie_rf.split(' - ')[0]} · ${parseFloat(r.confianza_rf).toFixed(1)}%</div></div>`;}).join('');
+}
+
+setInterval(()=>{if(['s-live','s-historial'].some(id=>document.getElementById(id).classList.contains('active')))fetchDash()},8000);
+
+document.getElementById('landing').style.display='flex';
+document.getElementById('app').style.display='none';
+</script>
+</body>
+</html>'''
